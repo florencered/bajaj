@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Roll Number</title>
+    <style>
+        body {
+            font-family: 'Verdana', sans-serif;
+            margin: 20px;
+            color: #333;
+            background-color: pink;
+        }
+        h1 {
+            font-size: 28px;
+            color: black;
+        }
+        label {
+            font-size: 18px;
+            color: #555;
+        }
+        textarea {
+            font-size: 16px;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            width: 75%;
+            box-sizing: border-box;
+        }
+        button {
+            font-size: 18px;
+            background-color: #28a745; /* Changed button color to a green shade */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px; /* Soften edges */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+        .error {
+            color: red;
+            font-size: 16px;
+        }
+        #responseOutput {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #4d4d4d;
+            background-color: #f4f4f4;
+            padding: 10px;
+            width: 50%;
+            height: 150px;
+            border: 2px solid #0073e6;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bajaj Finserv REST API Challenge</h1>
+    <div class="input-container">
+        <label for="jsonInput">Enter JSON:</label><br>
+        <textarea id="jsonInput" rows="5" cols="50"></textarea><br>
+        <button id="submitBtn">Submit</button>
+        <p id="errorMessage" class="error"></p>
+    </div>
+    
+    <div id="dropdownContainer" class="input-container" style="display: none;">
+        <label for="responseFilter">Select response filter:</label><br>
+        <select id="responseFilter" multiple>
+            <option value="numbers">Numbers</option>
+            <option value="alphabets">Alphabets</option>
+            <option value="highest_lowercase_alphabet">Highest Lowercase Alphabet</option>
+        </select>
+    </div>
+    
+    <div id="outputContainer" class="output-container">
+        <h3>Response:</h3>
+        <pre id="responseOutput"></pre>
+    </div>
+
+    <script>
+        const submitBtn = document.getElementById('submitBtn');
+        const jsonInput = document.getElementById('jsonInput');
+        const responseOutput = document.getElementById('responseOutput');
+        const dropdownContainer = document.getElementById('dropdownContainer');
+        const responseFilter = document.getElementById('responseFilter');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let responseData = null;
+
+        submitBtn.addEventListener('click', () => {
+            const jsonData = jsonInput.value.trim();
+            try {
+                const parsedData = JSON.parse(jsonData);
+                if (!Array.isArray(parsedData.data)) {
+                    throw new Error('Invalid JSON format');
+                }
+
+                errorMessage.textContent = '';
+                dropdownContainer.style.display = 'block';
+
+                fetch('/bfhl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    responseData = data;  // Store the response data for filtering
+                    responseOutput.textContent = JSON.stringify(data, null, 4);
+                })
+                .catch(error => {
+                    errorMessage.textContent = 'Error: ' + error.message;
+                });
+
+            } catch (error) {
+                errorMessage.textContent = 'Invalid JSON: ' + error.message;
+            }
+        });
+
+        responseFilter.addEventListener('change', () => {
+            if (!responseData) return;
+            const selectedOptions = Array.from(responseFilter.selectedOptions).map(option => option.value);
+            let filteredData = {};
+            selectedOptions.forEach(option => {
+                filteredData[option] = responseData[option];
+            });
+            responseOutput.textContent = JSON.stringify(filteredData, null, 4);
+        });
+    </script>
+</body>
+</html>
